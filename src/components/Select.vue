@@ -88,6 +88,9 @@
     flex-wrap: wrap;
     padding: 0 2px;
     position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .v-select .vs__actions {
@@ -137,7 +140,7 @@
     width: 100%;
     overflow-y: scroll;
     border: 1px solid rgba(0, 0, 0, .26);
-    box-shadow: 0px 3px 6px 0px rgba(0, 0, 0, .15);
+    box-shadow: 0 3px 6px 0 rgba(0, 0, 0, .15);
     border-top: none;
     border-radius: 0 0 4px 4px;
     text-align: left;
@@ -151,6 +154,7 @@
 
   /* Selected Tags */
   .v-select .selected-tag {
+    text-overflow: ellipsis;
     display: flex;
     align-items: center;
     background-color: #f0f0f0;
@@ -158,7 +162,7 @@
     border-radius: 4px;
     color: #333;
     line-height: 1.42857143; /* Normalize line height */
-    margin: 4px 2px 0px 2px;
+    margin: 4px 2px 0 2px;
     padding: 0 0.25em;
     transition: opacity .25s;
   }
@@ -411,7 +415,7 @@
         <li role="option" v-for="(option, index) in filteredOptions" :key="index"
             :class="{ active: isOptionSelected(option), highlight: index === typeAheadPointer }"
             @mouseover="typeAheadPointer = index">
-          <a @click="select(option)">
+          <a @click.prevent="select(option)">
             <slot name="option" v-bind="(typeof option === 'object')?option:{[label]: option}">
               {{ getOptionLabel(option) }}
             </slot>
@@ -425,10 +429,10 @@
   </div>
 </template>
 
-<script type="text/babel">
-  import pointerScroll from '../mixins/pointerScroll'
-  import typeAheadPointer from '../mixins/typeAheadPointer'
-  import ajax from '../mixins/ajax'
+<script>
+  import pointerScroll from '../mixins/pointerScroll';
+  import typeAheadPointer from '../mixins/typeAheadPointer';
+  import ajax from '../mixins/ajax';
 
   export default {
     mixins: [pointerScroll, typeAheadPointer, ajax],
@@ -454,8 +458,8 @@
       options: {
         type: Array,
         default() {
-          return []
-        },
+          return [];
+        }
       },
 
       /**
@@ -578,35 +582,21 @@
       getOptionLabel: {
         type: Function,
         default(option) {
-          if ( this.index ) {
-            option = this.findOptionByIndexValue(option)
+          if (this.index) {
+            option = this.findOptionByIndexValue(option);
           }
 
-          if ( typeof option === 'object' ) {
-            if ( !option.hasOwnProperty(this.label) ) {
+          if (typeof option === 'object') {
+            if (!option.hasOwnProperty(this.label)) {
               return console.warn(
                   `[vue-select warn]: Label key "option.${this.label}" does not` +
                   ` exist in options object ${JSON.stringify(option)}.\n` +
                   'http://sagalbot.github.io/vue-select/#ex-labels'
-              )
+              );
             }
-            return option[this.label]
+            return option[this.label];
           }
           return option;
-        }
-      },
-
-      /**
-       * An optional callback function that is called each time the selected
-       * value(s) change. When integrating with Vuex, use this callback to trigger
-       * an action, rather than using :value.sync to retreive the selected value.
-       * @type {Function}
-       * @param {Object || String} val
-       */
-      onChange: {
-        type: Function,
-        default: function(val) {
-          this.$emit('input', val)
         }
       },
 
@@ -616,10 +606,10 @@
       onTab: {
         type: Function,
         default: function() {
-          if ( this.selectOnTab ) {
+          if (this.selectOnTab) {
             this.typeAheadSelect();
           }
-        },
+        }
       },
 
       /**
@@ -674,7 +664,7 @@
       filterBy: {
         type: Function,
         default(option, label, search) {
-          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1
+          return (label || '').toLowerCase().indexOf(search.toLowerCase()) > -1;
         }
       },
 
@@ -694,10 +684,10 @@
         default(options, search) {
           return options.filter((option) => {
             let label = this.getOptionLabel(option);
-            if ( typeof label === 'number' ) {
-              label = label.toString()
+            if (typeof label === 'number') {
+              label = label.toString();
             }
-            return this.filterBy(option, label, search)
+            return this.filterBy(option, label, search);
           });
         }
       },
@@ -709,11 +699,11 @@
       createOption: {
         type: Function,
         default(newOption) {
-          if ( typeof this.mutableOptions[0] === 'object' ) {
-            newOption = {[this.label]: newOption}
+          if (typeof this.mutableOptions[0] === 'object') {
+            newOption = {[this.label]: newOption};
           }
           this.$emit('option:created', newOption);
-          return newOption
+          return newOption;
         }
       },
 
@@ -768,39 +758,11 @@
       return {
         search: '',
         open: false,
-        mutableValue: null,
         mutableOptions: []
-      }
+      };
     },
 
     watch: {
-      /**
-       * When the value prop changes, update
-       * the internal mutableValue.
-       * @param  {*} val
-       * @return {void}
-       */
-      value(val) {
-        if ( val && val.isEmpty && val.isEmpty() ) this.mutableValue = null;
-        else this.mutableValue = val;
-      },
-
-      /**
-       * Maybe run the onChange callback.
-       * @param  {string|object} val
-       * @param  {string|object} old
-       * @return {void}
-       */
-      mutableValue(val, old) {
-        if ( this.value && this.value.set ) this.value.set(val);
-
-        if ( this.multiple ) {
-          this.onChange ? this.onChange(val) : null
-        } else {
-          this.onChange && val !== old ? this.onChange(val) : null
-        }
-      },
-
       /**
        * When options change, update
        * the internal mutableOptions.
@@ -808,7 +770,7 @@
        * @return {void}
        */
       options(val) {
-        this.mutableOptions = val
+        this.mutableOptions = val;
       },
 
       /**
@@ -817,8 +779,8 @@
        * @return {[type]} [description]
        */
       mutableOptions() {
-        if ( !this.taggable && this.resetOnOptionsChange ) {
-          this.mutableValue = this.multiple ? [] : null
+        if (!this.taggable && this.resetOnOptionsChange) {
+          this.$emit('input', this.multiple ? [] : null);
         }
       },
 
@@ -829,7 +791,7 @@
        * @return {void}
        */
       multiple(val) {
-        this.mutableValue = val ? [] : null
+        this.$emit('input', val ? [] : null);
       }
     },
 
@@ -838,11 +800,10 @@
      * attach any event listeners.
      */
     created() {
-      this.mutableValue = this.value;
-      this.mutableOptions = this.options.slice(0);
+      this.mutableOptions = (this.options || []).slice(0);
       this.mutableLoading = this.loading;
 
-      this.$on('option:created', this.maybePushTag)
+      this.$on('option:created', this.maybePushTag);
     },
 
     methods: {
@@ -853,29 +814,40 @@
        * @return {void}
        */
       select(option) {
-        if ( !this.isOptionSelected(option) ) {
-          if ( this.taggable && !this.optionExists(option) ) {
-            option = this.createOption(option)
+        let value;
+        if (!this.isOptionSelected(option)) {
+          if (this.taggable && !this.optionExists(option)) {
+            option = this.createOption(option);
           }
-          if ( this.index ) {
-            if ( !option.hasOwnProperty(this.index) ) {
+
+          if (this.index) {
+            if (!option.hasOwnProperty(this.index)) {
               return console.warn(
                   `[vue-select warn]: Index key "option.${this.index}" does not` +
                   ` exist in options object ${JSON.stringify(option)}.`
-              )
+              );
             }
-            option = option[this.index]
+            value = option[this.index];
           }
-          if ( this.multiple && !this.mutableValue ) {
-            this.mutableValue = [option]
-          } else if ( this.multiple ) {
-            this.mutableValue.push(option)
-          } else {
-            this.mutableValue = option
+
+          if (!this.value || !option
+              || (this.value && option.constructor === this.value.constructor)) {
+            value = option;
+          }
+
+          if (this.multiple && !this.value) {
+            this.$emit('input', [value]);
+          }
+          else if (this.multiple) {
+            this.value.push(value);
+            this.$emit('input', this.value);
+          }
+          else {
+            this.$emit('input', value);
           }
         }
 
-        this.onAfterSelect(option)
+        this.onAfterSelect(option);
       },
 
       /**
@@ -884,17 +856,21 @@
        * @return {void}
        */
       deselect(option) {
-        if ( this.multiple ) {
+        if (this.multiple) {
           let ref = -1;
-          this.mutableValue.forEach((val) => {
-            if ( val === option || (this.index && val === option[this.index]) || (typeof val === 'object' && val[this.label] === option[this.label]) ) {
-              ref = val
+          this.value.forEach((val) => {
+            if (val === option
+                || (this.index && val === option[this.index])
+                || (typeof val === 'object' && val[this.label] === option[this.label])) {
+              ref = val;
             }
           });
-          const index = this.mutableValue.indexOf(ref);
-          this.mutableValue.splice(index, 1)
-        } else {
-          this.mutableValue = null
+          const index = this.value.indexOf(ref);
+          this.value.splice(index, 1);
+          this.$emit('input', this.value);
+        }
+        else {
+          this.$emit('input', null);
         }
       },
 
@@ -903,7 +879,7 @@
        * @return {void}
        */
       clearSelection() {
-        this.mutableValue = this.multiple ? [] : null
+        this.$emit('input', this.multiple ? [] : null);
       },
 
       /**
@@ -912,13 +888,13 @@
        * @return {void}
        */
       onAfterSelect(option) {
-        if ( this.closeOnSelect ) {
+        if (this.closeOnSelect) {
           this.open = !this.open;
-          this.$refs.search.blur()
+          this.$refs.search.blur();
         }
 
-        if ( this.clearSearchOnSelect ) {
-          this.search = ''
+        if (this.clearSearchOnSelect) {
+          this.search = '';
         }
       },
 
@@ -928,14 +904,15 @@
        * @return {void}
        */
       toggleDropdown(e) {
-        if ( e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle ||
-            e.target.classList.contains('selected-tag') || e.target === this.$el ) {
-          if ( this.open ) {
-            this.$refs.search.blur() // dropdown will close on blur
-          } else {
-            if ( !this.disabled ) {
+        if (e.target === this.$refs.openIndicator || e.target === this.$refs.search || e.target === this.$refs.toggle ||
+            e.target.classList.contains('selected-tag') || e.target === this.$el) {
+          if (this.open) {
+            this.$refs.search.blur(); // dropdown will close on blur
+          }
+          else {
+            if (!this.disabled) {
               this.open = true;
-              this.$refs.search.focus()
+              this.$refs.search.focus();
             }
           }
         }
@@ -949,13 +926,14 @@
       isOptionSelected(option) {
         let selected = false;
         this.valueAsArray.forEach(value => {
-          if ( typeof value === 'object' ) {
-            selected = this.optionObjectComparator(value, option)
-          } else if ( value === option || value === option[this.index] ) {
-            selected = true
+          if (typeof value === 'object') {
+            selected = this.optionObjectComparator(value, option);
+          }
+          else if (value === option || value === option[this.index]) {
+            selected = true;
           }
         });
-        return selected
+        return selected;
       },
 
       /**
@@ -966,12 +944,14 @@
        * @returns {boolean}
        */
       optionObjectComparator(value, option) {
-        if ( this.index && value === option[this.index] ) {
-          return true
-        } else if ( (value[this.label] === option[this.label]) || (value[this.label] === option) ) {
-          return true
-        } else if ( this.index && value[this.index] === option[this.index] ) {
-          return true
+        if (this.index && value === option[this.index]) {
+          return true;
+        }
+        else if ((value[this.label] === option[this.label]) || (value[this.label] === option)) {
+          return true;
+        }
+        else if (this.index && value[this.index] === option[this.index]) {
+          return true;
         }
         return false;
       },
@@ -986,11 +966,11 @@
        */
       findOptionByIndexValue(value) {
         this.options.forEach(_option => {
-          if ( JSON.stringify(_option[this.index]) === JSON.stringify(value) ) {
-            value = _option
+          if (JSON.stringify(_option[this.index]) === JSON.stringify(value)) {
+            value = _option;
           }
         });
-        return value
+        return value;
       },
 
       /**
@@ -999,10 +979,11 @@
        * @return {void}
        */
       onEscape() {
-        if ( !this.search.length ) {
-          this.$refs.search.blur()
-        } else {
-          this.search = ''
+        if (!this.search.length) {
+          this.$refs.search.blur();
+        }
+        else {
+          this.search = '';
         }
       },
 
@@ -1012,14 +993,15 @@
        * @return {void}
        */
       onSearchBlur() {
-        if ( this.mousedown && !this.searching ) {
-          this.mousedown = false
-        } else {
-          if ( this.clearSearchOnBlur ) {
-            this.search = ''
+        if (this.mousedown && !this.searching) {
+          this.mousedown = false;
+        }
+        else {
+          if (this.clearSearchOnBlur) {
+            this.search = '';
           }
           this.open = false;
-          this.$emit('search:blur')
+          this.$emit('search:blur');
         }
       },
 
@@ -1030,7 +1012,7 @@
        */
       onSearchFocus() {
         this.open = true;
-        this.$emit('search:focus')
+        this.$emit('search:focus');
       },
 
       /**
@@ -1039,8 +1021,16 @@
        * @return {this.value}
        */
       maybeDeleteValue() {
-        if ( !this.$refs.search.value.length && this.mutableValue ) {
-          return this.multiple ? this.mutableValue.pop() : this.mutableValue = null
+        if (!this.$refs.search.value.length && this.value) {
+          if (this.multiple) {
+            let val = this.value.pop();
+            this.$emit('input', val);
+            return val;
+          }
+          else {
+            this.$emit('input', null);
+            return null;
+          }
         }
       },
 
@@ -1055,14 +1045,15 @@
         let exists = false;
 
         this.mutableOptions.forEach(opt => {
-          if ( typeof opt === 'object' && opt[this.label] === option ) {
-            exists = true
-          } else if ( opt === option ) {
-            exists = true
+          if (typeof opt === 'object' && opt[this.label] === option) {
+            exists = true;
+          }
+          else if (opt === option) {
+            exists = true;
           }
         });
 
-        return exists
+        return exists;
       },
 
       /**
@@ -1073,8 +1064,8 @@
        * @return {void}
        */
       maybePushTag(option) {
-        if ( this.pushTags ) {
-          this.mutableOptions.push(option)
+        if (this.pushTags) {
+          this.mutableOptions.push(option);
         }
       },
 
@@ -1086,12 +1077,11 @@
        * @return {void}
        */
       onMousedown() {
-        this.mousedown = true
+        this.mousedown = true;
       }
     },
 
     computed: {
-
       /**
        * Classes to be output on .dropdown
        * @return {Object}
@@ -1106,7 +1096,7 @@
           loading: this.mutableLoading,
           rtl: this.dir === 'rtl', // This can be removed - styling is handled by `dir="rtl"` attribute
           disabled: this.disabled
-        }
+        };
       },
 
       /**
@@ -1114,7 +1104,7 @@
        * @return {Boolean} True when single and clearSearchOnSelect
        */
       clearSearchOnBlur() {
-        return this.clearSearchOnSelect && !this.multiple
+        return this.clearSearchOnSelect && !this.multiple;
       },
 
       /**
@@ -1123,7 +1113,7 @@
        * @return {Boolean} True if non empty value
        */
       searching() {
-        return !!this.search
+        return !!this.search;
       },
 
       /**
@@ -1132,7 +1122,7 @@
        * @return {Boolean} True if open
        */
       dropdownOpen() {
-        return this.noDrop ? false : this.open && !this.mutableLoading
+        return this.noDrop ? false : this.open && !this.mutableLoading;
       },
 
       /**
@@ -1141,7 +1131,7 @@
        * @return {String} Placeholder text
        */
       searchPlaceholder() {
-        if ( this.isValueEmpty && this.placeholder ) {
+        if (this.isValueEmpty && this.placeholder) {
           return this.placeholder;
         }
       },
@@ -1155,14 +1145,14 @@
        * @return {array}
        */
       filteredOptions() {
-        if ( !this.filterable && !this.taggable ) {
-          return this.mutableOptions.slice()
+        if (!this.filterable && !this.taggable) {
+          return this.mutableOptions.slice();
         }
         let options = this.search.length ? this.filter(this.mutableOptions, this.search, this) : this.mutableOptions;
-        if ( this.taggable && this.search.length && !this.optionExists(this.search) ) {
-          options.unshift(this.search)
+        if (this.taggable && this.search.length && !this.optionExists(this.search)) {
+          options.unshift(this.search);
         }
-        return options
+        return options;
       },
 
       /**
@@ -1170,14 +1160,14 @@
        * @return {Boolean}
        */
       isValueEmpty() {
-        if ( this.mutableValue ) {
-          if ( typeof this.mutableValue === 'object' ) {
-            if ( this.value && this.value.isEmpty ){
+        if (this.value) {
+          if (Object.prototype.toString.apply(this.value) === '[object Object]') {
+            if (this.value && this.value.isEmpty) {
               return this.value.isEmpty();
             }
-            else return !Object.keys(this.mutableValue).length;
+            else return !Object.keys(this.value).length;
           }
-          return !this.valueAsArray.length
+          return !this.valueAsArray.length;
         }
 
         return true;
@@ -1188,13 +1178,14 @@
        * @return {Array}
        */
       valueAsArray() {
-        if ( this.multiple && this.mutableValue ) {
-          return this.mutableValue
-        } else if ( this.mutableValue ) {
-          return [].concat(this.mutableValue)
+        if (this.multiple && this.value) {
+          return this.value;
+        }
+        else if (this.value) {
+          return [].concat(this.value);
         }
 
-        return []
+        return [];
       },
 
       /**
@@ -1202,9 +1193,8 @@
        * @return {Boolean}
        */
       showClearButton() {
-        return !this.multiple && this.clearable && !this.open && !this.isValueEmpty
+        return !this.multiple && this.clearable && !this.open && !this.isValueEmpty;
       }
-    },
-
-  }
+    }
+  };
 </script>
